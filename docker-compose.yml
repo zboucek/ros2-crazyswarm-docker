@@ -1,0 +1,13 @@
+services:
+  ros2-crazyswarm:
+    build: .
+    container_name: ros2-crazyswarm-container
+    network_mode: "host"
+    ipc: host
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    environment:
+      - DISPLAY=$DISPLAY
+      - RUN_MODE=compose
+    tty: true
+    stdin_open: true
