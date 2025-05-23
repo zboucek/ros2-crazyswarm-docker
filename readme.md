@@ -1,6 +1,6 @@
 # ROS 2 Crazyswarm Docker
 
-This repository is a fork of [captain-bender/ros2-crazyswarm-docker](https://github.com/captain-bender/ros2-crazyswarm-docker), updated to use ROS 2 Jammy and to support GUI applications (e.g., for simulation or swarm configuration).
+This repository is a fork of [captain-bender/ros2-crazyswarm-docker](https://github.com/captain-bender/ros2-crazyswarm-docker), updated to use ROS 2 Jazzy and to support GUI applications (e.g., for simulation or swarm configuration).
 
 ## Using CLI
 To build the image with Buildx, you need to type:
