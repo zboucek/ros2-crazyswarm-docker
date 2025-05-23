@@ -1,38 +1,64 @@
-# ROS 2 Crazyswarm docker
+# ROS 2 Crazyswarm Docker
 
-This is an image that I generated using installation guide in [Crazyswarm official page](https://crazyswarm.readthedocs.io/en/latest/).
+This repository is a fork of [captain-bender/ros2-crazyswarm-docker](https://github.com/captain-bender/ros2-crazyswarm-docker), updated to use ROS 2 Jammy and to support GUI applications (e.g., for simulation or swarm configuration).
 
-
-## Using CLI 
-To build the image, you need to type:
-```$
-docker build --no-cache -t ros2-crazyswarm  .
+## Using CLI
+To build the image with Buildx, you need to type:
+```bash
+docker buildx build --no-cache -t ros2-crazyswarm .
 ```
 
-To run the container, you need to type:
-```$
-docker run -it --rm --network=host --ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix:rw --env=DISPLAY --name ros2-crazyswarm swarm -container ros2-crazyswarm 
+To run the container with GUI support, you need to type:
+```bash
+docker run -it --rm --network=host --ipc=host \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v /run/user/$(id -u)/wayland-0:/run/user/$(id -u)/wayland-0 \
+  -e DISPLAY=$DISPLAY \
+  -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+  --name ros2-crazyswarm \
+  ros2-crazyswarm
 ```
 
-## Using docker compose
-To start the docker compose, you need to type:
-```$
+## Using Docker Compose
+To start the Docker Compose setup, you need to type:
+```bash
 docker compose up -d
 ```
-To get access in the container, you need to type:
-```$
-docker exec -it ros2-crazyswarm -container /bin/bash
+
+To access the container, you need to type:
+```bash
+docker exec -it ros2-crazyswarm /bin/bash
 ```
-To stop the docker compose, you need to type:
-```$
+
+To stop the Docker Compose setup, you need to type:
+```bash
 docker compose down
 ```
 
-## Levevl of readiness
-Not tested exhaustively. Use it on your own risk. If you discover issues, please report them.
+## Running the Simulation Example
+To run the simulation example, use the following command inside the container:
+```bash
+ros2 launch crazyflie_examples launch.py script:=hello_world backend:=sim
+```
 
-## Environment (or it works in my machine)
-It was testes in an Ubuntu 24.04.1 LTS machine
+## Updates
+- Added support for both Wayland and X11 display environments.
+- Dynamically configured ROS distribution using the `${ROS_DISTRO}` variable.
 
-### Author (to blame)
-Angelos Plastropoulos
+## Notes
+- Ensure that the `WAYLAND_DISPLAY` or `DISPLAY` environment variable is correctly set based on your display server.
+- GUI applications can be accessed via a web browser at `http://127.0.0.1:8080/` during simulation.
+
+## Level of Readiness
+This setup has not been tested exhaustively. Use it at your own risk. If you discover issues, please report them.
+
+## Environment
+This setup was tested on an Ubuntu 24.04.1 LTS machine.
+
+## Author
+Originally created by Angelos Plastropoulos, with updates for ROS 2 Jazzy and GUI support by Zdeněk Bouček.
+
+## References
+- [Docker Buildx Documentation](https://docs.docker.com/build/)
+- [Crazyswarm2 Documentation](https://imrclab.github.io/crazyswarm2/index.html)
+- [Crazyswarm2 Repository](https://github.com/IMRCLab/crazyswarm2)

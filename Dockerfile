@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=humble
+ARG ROS_DISTRO=jazzy
 FROM osrf/ros:${ROS_DISTRO}-desktop
 
 # Avoid prompts from apt
@@ -30,25 +30,15 @@ RUN apt-get update \
   python3-colcon-common-extensions \
   && rm -rf /var/lib/apt/list/*
 
+# Install python3-venv for creating virtual environments
+RUN apt-get update \
+  && apt-get install -y python3-venv \
+  && rm -rf /var/lib/apt/lists/*
+
 # Set up colcon_cd for future bash sessions
 RUN echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
-RUN echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
+RUN echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc
 RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
-
-# Add Gazebo repository
-RUN curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
-
-# Set up the gazebo version
-ARG GZ_VERSION=fortress
-
-# Install Gazebo
-RUN apt-get update \
-  && apt-get install -y \
-  gz-${GZ_VERSION} \
-  ros-${ROS_DISTRO}-ros-gz-sim \
-  ros-${ROS_DISTRO}-ros-gz-bridge \
-  && rm -rf /var/lib/apt/lists/*
 
 # Set up the environment
 ENV GZ_RESOURCE_PATH=/usr/share/gazebo-${GZ_VERSION}
@@ -63,9 +53,15 @@ RUN apt-get update \
   ros-${ROS_DISTRO}-teleop-twist-keyboard \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages dependencies
-RUN pip3 install rowan nicegui
-RUN pip3 install cflib transform3D
+# Create and use a Python virtual environment for package installation
+RUN python3 -m venv /opt/venv \
+  && . /opt/venv/bin/activate \
+  && pip install --upgrade pip \
+  && pip install rowan nicegui cflib transforms3d empy catkin_pkg lark \
+  && deactivate
+
+# Set the virtual environment as the default Python environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Set the working directory inside the container
 WORKDIR /home
@@ -119,6 +115,18 @@ ENV PYTHONPATH=${PYTHONPATH:-}/home/crazyflie-firmware/build:$PYTHONPATH
 
 # Set working directory to ros2_ws
 WORKDIR /home/ros2_ws
+
+# Add support for GUI applications
+RUN apt-get update \
+  && apt-get install -y \
+  x11-apps \
+  libgl1 \
+  libxrender1 \
+  libxext6 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set DISPLAY environment variable for GUI support
+ENV DISPLAY=:0
 
 # Entrypoint
 COPY entrypoint.sh /
